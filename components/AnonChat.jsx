@@ -183,6 +183,28 @@ function ChatScreen({ roomCode, myName, onLeave }) {
     } catch (err) { alert('Gagal kirim gambar.') }
   }
 
+  const copyRoom = () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(roomCode)
+      } else {
+        const textArea = document.createElement("textarea")
+        textArea.value = roomCode
+        textArea.style.position = "fixed"
+        textArea.style.left = "-9999px"
+        textArea.style.top = "0"
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
+      alert('Kode Room disalin!')
+    } catch (err) {
+      alert('Gagal salin. Kode: ' + roomCode)
+    }
+  }
+
   return (
     <div className="chatWrap">
       <BackgroundMist />
@@ -195,7 +217,7 @@ function ChatScreen({ roomCode, myName, onLeave }) {
         </div>
         <div style={{display:'flex', gap:'0.8rem', alignItems:'center'}}>
           <div style={{fontSize:'0.6rem', color:'var(--text-soft)', display:'none', md:'block'}}>Room: {roomCode}</div>
-          <button style={{background:'none', border:'none', color:'white', fontSize:'0.7rem', cursor:'pointer', borderBottom:'1px solid rgba(255,255,255,0.1)'}} onClick={() => {navigator.clipboard.writeText(roomCode); alert('Kode Room disalin!');}}>SALIN KODE</button>
+          <button style={{background:'none', border:'none', color:'white', fontSize:'0.7rem', cursor:'pointer', borderBottom:'1px solid rgba(255,255,255,0.1)'}} onClick={copyRoom}>SALIN KODE</button>
           <button style={{background:'none', border:'none', color:'#ef4444', fontSize:'0.7rem', cursor:'pointer', fontWeight:'800'}} onClick={onLeave}>KELUAR</button>
         </div>
       </header>

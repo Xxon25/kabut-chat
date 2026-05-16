@@ -189,6 +189,7 @@ body {
   padding: 1rem 1.5rem;
   border-radius: 100px;
   color: white;
+  font-size: 16px; /* Fix Auto-Zoom */
 }
 
 .btnSend {
@@ -202,4 +203,5 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  font-size: 16px; /* Fix Auto-Zoom */
 }
