@@ -1,57 +1,59 @@
-# anonchat
+# 🌫️ kabut. (Kabut Chat)
 
-Chat anonim berbasis room. Tanpa akun, tanpa database. Pesan berjalan lewat Supabase Realtime Broadcast dan hilang saat tab ditutup.
+Aplikasi pesan anonim premium dengan privasi tingkat tinggi. Tidak ada riwayat, tidak ada jejak, hanya obrolan yang menguap di balik kabut.
 
-## Setup
+Built with **Next.js 14**, **Supabase Realtime**, and **Vanilla CSS**.
 
-```bash
-git clone https://github.com/username/anonchat.git
-cd anonchat
-npm install
-cp .env.example .env.local
-```
+---
 
-Isi `.env.local` dengan kredensial dari Supabase Dashboard → Project Settings → API.
+## ✨ Fitur Sultan
+- **Anonymous Session:** Gak butuh login, gak butuh akun. Datang, chat, lenyap.
+- **Realtime Presence:** Tahu siapa yang lagi online di room secara akurat.
+- **Voice Notes (VN):** Kirim pesan suara dengan timer rekaman.
+- **Image Sharing:** Berbagi foto secara anonim.
+- **Reply System:** Balas pesan tertentu dengan fitur *double-click*.
+- **Cyber-Sleek UI:** Desain minimalis-editorial yang gelap, tajam, dan mewah.
 
-Aktifkan Realtime di Supabase: **Database → Replication → ON**. Tidak perlu buat tabel apapun.
+---
 
-```bash
-npm run dev
-```
+## 🚀 Gaskeun Jalankan Lokal
 
-## Deploy
+1. **Clone & Install:**
+   ```bash
+   git clone https://github.com/Xxon25/kabut-chat.git
+   cd kabut-chat
+   npm install
+   ```
 
-Set GitHub Secrets:
+2. **Setup Environment:**
+   Buat file `.env.local` dan isi dengan kredensial Supabase Anda:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-| Secret | Sumber |
-|:---|:---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
-| `VERCEL_TOKEN` | vercel.com → Settings → Tokens |
-| `VERCEL_ORG_ID` | Vercel dashboard |
-| `VERCEL_PROJECT_ID` | Vercel dashboard |
+3. **Setup Supabase Storage:**
+   - Buat bucket bernama `chat-assets` di Supabase Storage.
+   - Set bucket ke **Public**.
+   - Atur **CORS** ke `*` agar upload lancar.
 
-Push ke `main` → GitHub Actions otomatis build + deploy ke Vercel.
+4. **Run Dev Server:**
+   ```bash
+   npm run dev
+   ```
+   Buka [http://localhost:3000](http://localhost:3000).
 
-Atau manual:
+---
 
-```bash
-bash scripts/deploy.sh "feat: deskripsi perubahan"
-```
+## 🌍 Cara Deploy (Agar Bisa Dites Orang Lain)
 
-## Struktur
+Aplikasi ini paling pas di-deploy ke **Vercel**.
 
-```
-anonchat/
-├── app/
-│   ├── layout.js
-│   ├── page.js
-│   └── globals.css
-├── components/
-│   └── AnonChat.jsx
-├── lib/
-│   └── supabase.js
-├── scripts/
-│   └── deploy.sh
-└── .github/workflows/deploy.yml
-```
+1. Masuk ke [Vercel Dashboard](https://vercel.com).
+2. Klik **Add New Project** > **Import** dari GitHub repositori ini.
+3. Masukkan **Environment Variables** (`NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY`) di setting Vercel.
+4. Klik **Deploy**. Selesai! Anda akan dapat URL publik yang bisa disebar.
+
+---
+
+**Status:** `AKTIF & MENGIKAT` — Dibuat dengan ❤️ untuk komunitas anonim Indonesia.

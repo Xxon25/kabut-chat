@@ -22,17 +22,21 @@ function HomeScreen({ onEnter }) {
       
       <div className="homeCard">
         <div style={{display: 'flex', gap: '0.5rem', marginBottom: '2.5rem', background: '#050505', padding: '0.4rem', borderRadius: '12px'}}>
-          <button className={`toggleBtn ${mode === 'create' ? 'active' : ''}`} onClick={() => setMode('create')} style={{flex:1, background: mode==='create'?'#3b82f6':'transparent', color: mode==='create'?'white':'#475569', border:'none', padding:'0.6rem', borderRadius:'8px', fontWeight:'700', cursor:'pointer'}}>Create</button>
-          <button className={`toggleBtn ${mode === 'join' ? 'active' : ''}`} onClick={() => setMode('join')} style={{flex:1, background: mode==='join'?'#3b82f6':'transparent', color: mode==='join'?'white':'#475569', border:'none', padding:'0.6rem', borderRadius:'8px', fontWeight:'700', cursor:'pointer'}}>Join</button>
+          <button className={`toggleBtn ${mode === 'create' ? 'active' : ''}`} onClick={() => setMode('create')} style={{flex:1, background: mode==='create'?'#3b82f6':'transparent', color: mode==='create'?'white':'#475569', border:'none', padding:'0.6rem', borderRadius:'8px', fontWeight:'700', cursor:'pointer'}}>Buat Room</button>
+          <button className={`toggleBtn ${mode === 'join' ? 'active' : ''}`} onClick={() => setMode('join')} style={{flex:1, background: mode==='join'?'#3b82f6':'transparent', color: mode==='join'?'white':'#475569', border:'none', padding:'0.6rem', borderRadius:'8px', fontWeight:'700', cursor:'pointer'}}>Gabung Room</button>
         </div>
 
-        <input className="homeInput" value={name} onChange={e => setName(e.target.value)} placeholder="Display Name" maxLength={15} />
-        {mode === 'join' && <input className="homeInput" style={{letterSpacing: '6px', textAlign: 'center', fontWeight: '700'}} value={code} onChange={e => setCode(e.target.value)} placeholder="ROOM CODE" maxLength={6} />}
+        <input className="homeInput" value={name} onChange={e => setName(e.target.value)} placeholder="Nama Samaran (E.g: Si Paling Anon)" maxLength={15} />
+        {mode === 'join' && <input className="homeInput" style={{letterSpacing: '6px', textAlign: 'center', fontWeight: '700'}} value={code} onChange={e => setCode(e.target.value)} placeholder="KODE AKSES" maxLength={6} />}
         
         <button className="btnAction" onClick={handleStart} disabled={!name}>
-          Launch Session →
+          {mode === 'create' ? 'Gaskeun Obrolan →' : 'Masuk ke Room →'}
         </button>
       </div>
+
+      <p style={{marginTop: '2rem', fontSize: '0.75rem', color: '#475569', textAlign: 'center', lineHeight: '1.5'}}>
+        Identitasmu aman di balik kabut.<br/>Pesan akan lenyap saat kamu keluar.
+      </p>
     </main>
   )
 }
@@ -52,13 +56,21 @@ function ChatScreen({ roomCode, myName, onLeave }) {
   const timerRef = useRef(null)
 
   useEffect(() => {
-    const channel = supabase.channel(`vanish:${roomCode}`, {
+    const channel = supabase.channel(`kabut:${roomCode}`, {
       config: { presence: { key: myName } }
     })
 
     channel
       .on('presence', { event: 'sync' }, () => {
         setOnlineCount(Object.keys(channel.presenceState()).length)
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        if (newPresences[0].key !== myName) {
+          setMessages(prev => [...prev, { id: Date.now(), type: 'sys', text: `${newPresences[0].key} baru saja masuk` }])
+        }
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        setMessages(prev => [...prev, { id: Date.now(), type: 'sys', text: `${leftPresences[0].key} telah keluar` }])
       })
       .on('broadcast', { event: 'msg' }, ({ payload }) => {
         setMessages(prev => [...prev, payload])
@@ -112,14 +124,14 @@ function ChatScreen({ roomCode, myName, onLeave }) {
       mr.start()
       setIsRecording(true)
       timerRef.current = setInterval(() => setRecTime(prev => prev + 1), 1000)
-    } catch (e) { alert('Mic blocked.') }
+    } catch (e) { alert('Mic diblokir.') }
   }
 
   const stopRec = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
-      mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop())
+      mediaRecorderRef.current.stream.getTracks().forEach(t => track.stop())
     }
   }
 
@@ -135,35 +147,43 @@ function ChatScreen({ roomCode, myName, onLeave }) {
         <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
           <div style={{fontWeight:'900', fontSize:'1.5rem', letterSpacing:'-1px'}}>kabut<span>.</span></div>
           <div style={{height:'20px', width:'1px', background:'var(--border)'}}></div>
-          <div className="roomCode" style={{fontWeight:'700', fontSize:'0.9rem', cursor:'pointer'}} onClick={() => {navigator.clipboard.writeText(roomCode); alert('Room link copied!');}}>{roomCode}</div>
+          <div className="roomCode" style={{fontWeight:'700', fontSize:'0.9rem', cursor:'pointer'}} onClick={() => {navigator.clipboard.writeText(`${window.location.origin}?join=${roomCode}`); alert('Link undangan disalin! Gaskeun sebar!');}}>{roomCode}</div>
         </div>
         <div className="headerRight" style={{display:'flex', alignItems:'center', gap:'1.5rem'}}>
           <div className="onlineBadge">
             <span className="onlineDot"></span>
-            {onlineCount} ACTIVE
+            {onlineCount} ONLINE
           </div>
-          <button onClick={onLeave} style={{background:'none', border:'none', color:'var(--text-dim)', fontSize:'0.7rem', fontWeight:'700', cursor:'pointer'}}>TERMINATE</button>
+          <button onClick={onLeave} style={{background:'none', border:'none', color:'var(--text-dim)', fontSize:'0.7rem', fontWeight:'700', cursor:'pointer'}}>AKHIRI</button>
         </div>
       </header>
 
       <div className="messages">
+        <div style={{textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-dim)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '2px'}}>Jejakmu tersembunyi di balik kabut...</div>
+        
         {messages.map((msg, idx) => {
           const prevMsg = messages[idx - 1]
           const isSameSender = prevMsg && prevMsg.sender === msg.sender && (msg.ts - prevMsg.ts < 60000)
           
           return (
             <div key={msg.id} className={`msgRow ${msg.sender === myName ? 'me' : 'them'} ${isSameSender ? 'sameSender' : ''}`} onDoubleClick={() => setReplyTo(msg)}>
-              {!isSameSender && <div className="msgSender">{msg.sender}</div>}
-              <div className={`bubble ${msg.sender === myName ? 'me' : 'them'}`}>
-                {msg.reply && (
-                  <div className="replyPreviewChat">
-                    <div style={{fontWeight:'700', fontSize:'0.7rem', color:'var(--primary)'}}>{msg.reply.sender}</div>
-                    <div style={{whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', opacity: 0.7}}>{msg.reply.text}</div>
+              {msg.type === 'sys' ? (
+                <div style={{alignSelf: 'center', fontSize: '0.65rem', color: 'var(--text-dim)', margin: '1rem 0'}}>{msg.text}</div>
+              ) : (
+                <>
+                  {!isSameSender && <div className="msgSender">{msg.sender}</div>}
+                  <div className={`bubble ${msg.sender === myName ? 'me' : 'them'}`}>
+                    {msg.reply && (
+                      <div className="replyPreviewChat">
+                        <div style={{fontWeight:'700', fontSize:'0.7rem', color:'var(--primary)'}}>{msg.reply.sender}</div>
+                        <div style={{whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', opacity: 0.7}}>{msg.reply.text}</div>
+                      </div>
+                    )}
+                    {msg.type === 'vn' ? <audio src={msg.text} controls className="audioItem" /> : msg.text}
+                    <div style={{fontSize:'0.6rem', opacity:0.4, marginTop:'0.4rem', textAlign: msg.sender===myName?'right':'left'}}>{formatTime(msg.ts)}</div>
                   </div>
-                )}
-                {msg.type === 'vn' ? <audio src={msg.text} controls className="audioItem" /> : msg.text}
-                <div style={{fontSize:'0.6rem', opacity:0.4, marginTop:'0.4rem', textAlign: msg.sender===myName?'right':'left'}}>{formatTime(msg.ts)}</div>
-              </div>
+                </>
+              )}
             </div>
           )
         })}
@@ -173,7 +193,7 @@ function ChatScreen({ roomCode, myName, onLeave }) {
       {replyTo && (
         <div style={{background: '#0e0e0e', padding: '0.8rem 2.5rem', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)'}}>
           <div style={{borderLeft: '2px solid var(--primary)', paddingLeft: '1rem'}}>
-            <div style={{fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700'}}>Replying to {replyTo.sender}</div>
+            <div style={{fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700'}}>Membalas {replyTo.sender}</div>
             <div style={{fontSize: '0.75rem', color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px'}}>{replyTo.text}</div>
           </div>
           <button onClick={() => setReplyTo(null)} style={{background: 'none', border: 'none', color: '#475569', cursor: 'pointer'}}>✕</button>
@@ -185,9 +205,9 @@ function ChatScreen({ roomCode, myName, onLeave }) {
         <input 
           className="mainInput" 
           value={inputValue} 
-          onChange={e => setInputValue(e.target.value)} 
+          onChange={handleInputChange} 
           onKeyDown={e => e.key === 'Enter' && sendMsg(inputValue)} 
-          placeholder={isRecording ? "Recording audio..." : "Share a thought..."} 
+          placeholder={isRecording ? "Sedang merekam..." : "Tulis sesuatu..."} 
           disabled={isRecording}
         />
         
@@ -207,6 +227,15 @@ function ChatScreen({ roomCode, myName, onLeave }) {
 
 export default function AnonChat() {
   const [room, setRoom] = useState(null)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const joinCode = params.get('join')
+    if (joinCode) {
+      const name = window.prompt('Siapa nama samaranmu?')
+      if (name) setRoom({ code: joinCode.toUpperCase(), name })
+      window.history.replaceState({}, '', '/')
+    }
+  }, [])
   if (!room) return <HomeScreen onEnter={(code, name) => setRoom({ code, name })} />
   return <ChatScreen roomCode={room.code} myName={room.name} onLeave={() => setRoom(null)} />
 }
