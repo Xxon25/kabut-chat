@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# environment variables — JANGAN pernah di-commit
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Supabase local
+.supabase/
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
