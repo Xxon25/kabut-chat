@@ -53,11 +53,11 @@ function HomeScreen({ onEnter }) {
         </div>
 
         <div style={{display:'flex', flexDirection:'column', gap:'1rem', marginBottom:'1.5rem'}}>
-          <input className="inputField" value={name} onChange={e => setName(e.target.value)} placeholder="Nama samaran kamu..." maxLength={15} style={{textAlign:'center'}} />
-          {mode === 'join' && <input className="inputField" value={code} onChange={e => setCode(e.target.value)} placeholder="KODE ROOM" maxLength={8} style={{textAlign:'center', letterSpacing:'4px', fontWeight:'800'}} />}
+          <input className="inputField" value={name} onChange={e => setName(e.target.value)} placeholder="Nama samaran kamu..." maxLength={15} style={{textAlign:'center'}} autoFocus />
+          {mode === 'join' && <input className="inputField" value={code} onChange={e => setCode(e.target.value)} placeholder="KODE ROOM" maxLength={8} style={{textAlign:'center', letterSpacing:'4px', fontWeight:'800'}} autoFocus={mode === 'join'} />}
         </div>
         
-        <button className="btnSend" onClick={handleStart} disabled={!name} style={{width:'100%', borderRadius:'20px', fontWeight:'800', fontSize:'16px'}}>
+        <button className="btnSend" onClick={handleStart} disabled={!name.trim() || (mode === 'join' && !code.trim())} style={{width:'100%', borderRadius:'20px', fontWeight:'800', fontSize:'16px'}}>
           GAS CHATTING! 💬
         </button>
       </div>
@@ -78,23 +78,33 @@ function ChatScreen({ roomCode, myName, onLeave }) {
   
   const channelRef = useRef(null)
   const bottomRef = useRef(null)
+  const presenceIdRef = useRef(Math.random().toString(36).substring(2, 10))
 
   useEffect(() => {
     const cleanRoomCode = roomCode.trim().toUpperCase()
     const channel = supabase.channel(`kabut-room:${cleanRoomCode}`, {
-      config: { presence: { key: myName }, broadcast: { self: false, ack: true } }
+      config: { 
+        presence: { key: presenceIdRef.current }, 
+        broadcast: { self: false, ack: true } 
+      }
     })
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        setOnlineCount(Object.keys(channel.presenceState()).length)
+        const state = channel.presenceState()
+        setOnlineCount(Object.keys(state).length)
       })
       .on('broadcast', { event: 'msg' }, ({ payload }) => {
         setMessages(prev => [...prev, payload])
       })
       .subscribe(async (status) => {
         setStatus(status)
-        if (status === 'SUBSCRIBED') await channel.track({ online_at: new Date().toISOString() })
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ 
+            name: myName,
+            online_at: new Date().toISOString() 
+          })
+        }
       })
 
     channelRef.current = channel
@@ -120,16 +130,24 @@ function ChatScreen({ roomCode, myName, onLeave }) {
     setReplyTo(null)
   }
 
-  const copyRoom = () => {
+  const copyRoom = async () => {
     try {
-      const el = document.createElement('textarea')
-      el.value = roomCode
-      document.body.appendChild(el)
-      el.select()
-      document.execCommand('copy')
-      document.body.removeChild(el)
-      alert('Kode berhasil disalin! Gaskeun sebar ke temen: ' + roomCode)
-    } catch (e) { alert('Kode Room: ' + roomCode) }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(roomCode)
+        alert('Kode berhasil disalin! Gaskeun sebar ke temen: ' + roomCode)
+      } else {
+        const el = document.createElement('textarea')
+        el.value = roomCode
+        document.body.appendChild(el)
+        el.select()
+        document.execCommand('copy')
+        document.body.removeChild(el)
+        alert('Kode berhasil disalin! Gaskeun sebar ke temen: ' + roomCode)
+      }
+    } catch (e) { 
+      console.error('Copy failed', e)
+      alert('Kode Room: ' + roomCode) 
+    }
   }
 
   return (
@@ -145,7 +163,7 @@ function ChatScreen({ roomCode, myName, onLeave }) {
         </div>
         <div style={{display:'flex', gap:'0.8rem'}}>
           <button onClick={copyRoom} style={{background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'white', padding:'0.5rem 1rem', borderRadius:'12px', fontSize:'0.7rem', fontWeight:'800'}}>SALIN KODE</button>
-          <button onClick={onLeave} style={{background:'rgba(239, 68, 68, 0.1)', border:'none', color:'#ef4444', padding:'0.5rem 1rem', borderRadius:'12px', fontSize:'0.7rem', fontWeight:'800'}}>CABUT</button>
+          <button onClick={() => window.confirm('Yakin mau cabut? Pesan bakal ilang semua bross!') && onLeave()} style={{background:'rgba(239, 68, 68, 0.1)', border:'none', color:'#ef4444', padding:'0.5rem 1rem', borderRadius:'12px', fontSize:'0.7rem', fontWeight:'800'}}>CABUT</button>
         </div>
       </header>
 
@@ -160,7 +178,19 @@ function ChatScreen({ roomCode, myName, onLeave }) {
           const isSameSender = prevMsg && prevMsg.sender === msg.sender && (msg.ts - prevMsg.ts < 60000)
           return (
             <div key={msg.id} className={`msgRow ${isMe ? 'me' : 'them'}`} onDoubleClick={() => setReplyTo(msg)}>
-              {!isSameSender && <div style={{fontSize: '0.75rem', fontWeight: '800', color: isMe?'var(--kabut-emerald)':'white', marginBottom: '0.3rem', marginLeft: '0.5rem'}}>{msg.sender}</div>}
+              {!isSameSender && (
+                <div style={{
+                  fontSize: '0.75rem', 
+                  fontWeight: '800', 
+                  color: isMe ? 'var(--kabut-emerald)' : 'white', 
+                  marginBottom: '0.3rem', 
+                  marginLeft: isMe ? '0' : '0.5rem',
+                  marginRight: isMe ? '0.5rem' : '0',
+                  textAlign: isMe ? 'right' : 'left'
+                }}>
+                  {msg.sender}
+                </div>
+              )}
               <div className={`bubble ${isMe ? 'me' : 'them'}`}>
                 {msg.reply && (
                    <div style={{background:'rgba(0,0,0,0.1)', borderLeft:'3px solid rgba(255,255,255,0.3)', padding:'0.4rem 0.8rem', borderRadius:'6px', marginBottom:'0.6rem', fontSize:'0.8rem', opacity:0.8}}>
@@ -192,7 +222,7 @@ function ChatScreen({ roomCode, myName, onLeave }) {
 
       <div className="inputArea">
         <input className="inputField" value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMsg(inputValue)} placeholder="Bisikkan sesuatu..." />
-        <button className="btnSend" onClick={() => sendMsg(inputValue)}>
+        <button className="btnSend" onClick={() => sendMsg(inputValue)} disabled={!inputValue.trim()} style={{opacity: inputValue.trim() ? 1 : 0.5}}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
