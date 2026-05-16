@@ -71,7 +71,7 @@ function ChatScreen({ roomCode, myName, onLeave }) {
   const typingTimeoutRef = useRef(null)
 
   useEffect(() => {
-    const channel = supabase.channel(`kabut_vfinal_${roomCode}`, {
+    const channel = supabase.channel(`kabut-room:${roomCode}`, {
       config: { presence: { key: myName } }
     })
 
