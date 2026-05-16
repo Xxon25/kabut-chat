@@ -75,6 +75,14 @@ function ChatScreen({ roomCode, myName, onLeave }) {
       .on('broadcast', { event: 'msg' }, ({ payload }) => {
         setMessages(prev => [...prev, payload])
       })
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        setTypingUsers(prev => {
+          const next = new Set(prev)
+          if (payload.typing) next.add(payload.user)
+          else next.delete(payload.user)
+          return next
+        })
+      })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') await channel.track({ online_at: new Date().toISOString() })
       })
@@ -99,8 +107,24 @@ function ChatScreen({ roomCode, myName, onLeave }) {
     }
     setMessages(prev => [...prev, msg])
     await channelRef.current.send({ type: 'broadcast', event: 'msg', payload: msg })
+    
+    // Matikan status ngetik setelah kirim
+    channelRef.current?.send({ type: 'broadcast', event: 'typing', payload: { user: myName, typing: false } })
+    
     setInputValue('')
     setReplyTo(null)
+  }
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value)
+    
+    // Broadcast status ngetik
+    channelRef.current?.send({ type: 'broadcast', event: 'typing', payload: { user: myName, typing: true } })
+    
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(() => {
+      channelRef.current?.send({ type: 'broadcast', event: 'typing', payload: { user: myName, typing: false } })
+    }, 2000)
   }
 
   const startRec = async () => {
@@ -131,7 +155,7 @@ function ChatScreen({ roomCode, myName, onLeave }) {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
-      mediaRecorderRef.current.stream.getTracks().forEach(t => track.stop())
+      mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop())
     }
   }
 
