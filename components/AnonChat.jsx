@@ -35,10 +35,10 @@ function HomeScreen({ onEnter }) {
       <div className="brandLogo">kabut<span>.</span></div>
       
       <div className="introBox">
-        <h2>Bisik-bisik paling aman di Nusantara.</h2>
+        <h2>Chat Anonim Tanpa Jejak & Tanpa Riwayat.</h2>
         <p>
-          Selamat datang di Kabut. Tempat nongkrong digital dimana obrolanmu 
-          menguap seketika tanpa sisa. Tanpa database, tanpa riwayat, murni privasi.
+          Ngobrol bebas sesukamu di dalam room rahasia. 
+          Semua pesan bakal hilang otomatis saat sesi berakhir atau saat kamu keluar.
         </p>
       </div>
       
