@@ -227,7 +227,7 @@ function ChatScreen({ roomCode, myName, onLeave }) {
                   </div>
                 )}
                 <div className="msgMeta">
-                  {formatTime(msg.ts)} {isMe && ' ✓✓'}
+                  {formatTime(msg.ts)}
                 </div>
               </div>
             </div>
