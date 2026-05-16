@@ -19,3 +19,6 @@ out/
 .DS_Store
 *.pem
 npm-debug.log*
+
+# AI Planner (Local Only)
+PLANNER_INSTRUCTIONS.md
