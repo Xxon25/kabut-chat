@@ -2,10 +2,12 @@
 
 :root {
   --bg-deep: #0a121e;
-  --kabut-accent: #34d399;
+  --kabut-emerald: #10b981;
+  --kabut-mint: #34d399;
   --text-main: #f8fafc;
   --text-soft: #94a3b8;
   --glass: blur(25px);
+  --accent-gradient: linear-gradient(135deg, var(--kabut-emerald), var(--kabut-mint));
 }
 
 * {
@@ -19,13 +21,13 @@
 body {
   background-color: var(--bg-deep);
   color: var(--text-main);
-  /* Pakai dvh agar address bar HP gak ganggu */
   height: 100dvh; 
   width: 100vw;
   overflow: hidden;
-  position: fixed; /* Mencegah pull-to-refresh yang ganggu chat */
+  position: fixed;
 }
 
+/* Animasi Awan Emerald yang Estetik */
 .cloud-container {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -33,25 +35,52 @@ body {
   z-index: -1;
 }
 
-/* --- Chat Layout --- */
+.cloud {
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.07) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(120px);
+  animation: float 25s infinite linear;
+}
+
+.cloud-1 { top: -20%; left: -10%; }
+.cloud-2 { bottom: -20%; right: -10%; animation-direction: reverse; }
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, 100px) scale(1.1); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* --- Branding --- */
+.brand-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- Chat Container --- */
 .chatWrap {
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  /* Handling Notch/Poni HP */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .chatHeader {
-  padding: 1rem 1.5rem;
+  padding: 1.2rem 1.5rem;
   background: rgba(10, 18, 30, 0.85);
   backdrop-filter: var(--glass);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
+  z-index: 10;
 }
 
 .messages {
@@ -60,75 +89,75 @@ body {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  -webkit-overflow-scrolling: touch; /* Scroll halus di iPhone */
+  gap: 1rem;
 }
 
-/* Fix Bubble Agar Gak "Penyok" */
 .msgRow {
   display: flex;
   flex-direction: column;
   max-width: 85%;
-  min-width: 60px;
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .bubble {
-  padding: 0.8rem 1rem;
-  border-radius: 20px;
-  font-size: 16px; /* Standar Anti-Zoom */
-  line-height: 1.4;
-  word-break: break-word;
+  padding: 0.9rem 1.2rem;
+  border-radius: 24px;
+  font-size: 16px;
+  line-height: 1.5;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+.bubble.me {
+  background: var(--accent-gradient);
+  color: #031c12;
+  font-weight: 600;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.bubble.them {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: white;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+/* --- Input Bar --- */
 .inputArea {
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   background: rgba(10, 18, 30, 0.95);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
-  gap: 0.8rem;
+  gap: 1rem;
   align-items: center;
-  flex-shrink: 0;
 }
 
 .inputField {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 0.8rem 1.2rem;
+  padding: 0.9rem 1.4rem;
   border-radius: 100px;
   color: white;
   font-size: 16px;
 }
 
 .btnSend {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background: var(--kabut-accent);
-  color: #0a121e;
+  background: var(--accent-gradient);
+  color: #031c12;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  flex-shrink: 0;
-}
-
-/* Home Screen Fix */
-.homeWrap {
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-}
-
-.homeCard {
-  width: 100%;
-  max-width: 400px;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: var(--glass);
-  padding: 2.5rem 2rem;
-  border-radius: 35px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
